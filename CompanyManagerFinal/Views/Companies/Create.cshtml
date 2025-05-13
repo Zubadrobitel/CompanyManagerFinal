@@ -1,0 +1,47 @@
+﻿@model CompanyManagerFinal.Core.Models.CompanyModel
+@{
+    ViewData["Title"] = "Создагие компании";
+}
+
+<div class="card shadow-sm">
+    <div class="card-header bg-white">
+        <h3 class="card-title"><i class="ms-Icon ms-Icon--CompanyDirectory"></i>Создание компании</h3>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <form method="post">
+                @Html.AntiForgeryToken()
+                <div class="form-group">
+                    <p>
+                        <h5>Название</h5>
+                        <input asp-for="Name" class="form-control" value="@Model?.Name"/>
+                        <span asp-validation-for="Name" class="text-danger"></span>
+                    </p>
+                </div class="form-group">
+                <div>
+                    <p>
+                        <h5>Описание</h5>
+                        <input asp-for="Description" class="form-control" value="@Model?.Description"/>
+                        <span asp-validation-for="Description" class="text-danger"></span>
+                    </p>
+                </div>
+                <div class="form-group">
+                    @if(Model == null)
+                    {
+                        <button type="submit" class="btn btn-fluent btn-primary" asp-action="Create">
+                            Создать
+                        </button>
+                    }
+                    else
+                    {
+                        <button type="submit" class="btn btn-fluent btn-primary" asp-action="Edit" >
+                            Изменить
+                        </button>
+                    }
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="card-footer bg-white">
+    </div>
+</div>
