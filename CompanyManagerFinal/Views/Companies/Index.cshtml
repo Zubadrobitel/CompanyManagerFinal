@@ -1,0 +1,159 @@
+﻿@model IEnumerable<CompanyManagerFinal.Core.Models.CompanyModel>
+@{
+    ViewData["Title"] = "Список компаний";
+}
+
+<div class="card shadow-sm">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h3 class="card-title mb-0"><i class="ms-Icon ms-Icon--CompanyDirectory"></i> Список компаний</h3>
+        <div>
+            <button id="deleteAllSelected" class="btn btn-danger" disabled>
+                <i class="ms-Icon ms-Icon--Delete"></i> Удалить выделенное
+            </button>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-fluent table-hover" id="companiesTable">
+                <thead>
+                    <tr>
+                        <th width="40px">
+                            <input type="checkbox" id="selectAll" class="form-check-input">
+                        </th>
+                        <th>ID</th>
+                        <th>Название</th>
+                        <th>Описание</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var company in Model)
+                    {
+                        <tr data-id="@company.Id">
+                            <td><input type="checkbox" class="row-checkbox form-check-input"></td>
+                            <td>@company.Id</td>
+                            <td><span class="fw-semibold">@company.Name</span></td>
+                            <td class="text-muted">@(company.Description ?? "—")</td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <form asp-action="Edit" method="get">
+                                        <input type="hidden" name="id" value="@company.Id"/>
+                                        <button type="submit" class="btn btn-fluent btn-primary">
+                                            <i class="ms-Icon ms-Icon--Edit"></i> Изменить
+                                        </button>
+                                    </form>
+                                    <form asp-action="Delete" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@company.Id" />
+                                        <button type="submit" class="btn btn-danger">
+                                            <i class="ms-Icon ms-Icon--Delete"></i> Удалить
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="card-footer bg-white">
+        <form asp-action="Create" method="get">
+            <input type="hidden" name="isEdit" value="@false" />
+            <button type="submit" class="btn btn-fluent btn-primary">
+                <i class="ms-Icon ms-Icon--Add"></i> Новая компания
+            </button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const selectAll = document.getElementById('selectAll');
+            const rowCheckboxes = document.querySelectorAll('.row-checkbox');
+            const deleteAllBtn = document.getElementById('deleteAllSelected');
+
+            selectAll.addEventListener('change', function() {
+                rowCheckboxes.forEach(checkbox => {
+                    checkbox.checked = this.checked;
+                    toggleRowHighlight(checkbox);
+                });
+                toggleDeleteButton();
+            });
+
+            rowCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    toggleRowHighlight(this);
+                    toggleDeleteButton();
+                    updateSelectAll();
+                });
+            });
+
+            deleteAllBtn.addEventListener('click', function() {
+                const selectedIds = Array.from(document.querySelectorAll('.row-checkbox:checked'))
+                    .map(checkbox => checkbox.closest('tr').dataset.id);
+
+                if (selectedIds.length > 0 && confirm(`Вы уверены, что хотите удалить ${selectedIds.length} компаний?`)) {
+                    const form = document.createElement('form');
+                    form.method = 'post';
+                    form.action = '/Companies/DeleteMultiple';
+
+                    const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+                    const tokenInput = document.createElement('input');
+                    tokenInput.type = 'hidden';
+                    tokenInput.name = '__RequestVerificationToken';
+                    tokenInput.value = token;
+                    form.appendChild(tokenInput);
+
+                    selectedIds.forEach(id => {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = 'ids';
+                        input.value = id;
+                        form.appendChild(input);
+                    });
+
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            });
+
+            function toggleRowHighlight(checkbox) {
+                const row = checkbox.closest('tr');
+                if (checkbox.checked) {
+                    row.classList.add('table-danger');
+                } else {
+                    row.classList.remove('table-danger');
+                }
+            }
+
+            function toggleDeleteButton() {
+                deleteAllBtn.disabled = document.querySelectorAll('.row-checkbox:checked').length === 0;
+            }
+
+            function updateSelectAll() {
+                selectAll.checked = rowCheckboxes.length === document.querySelectorAll('.row-checkbox:checked').length;
+            }
+        });
+    </script>
+
+    <style>
+        .row-checkbox {
+            cursor: pointer;
+        }
+
+        #selectAll {
+            cursor: pointer;
+        }
+
+        #deleteAllSelected:disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .table-danger {
+            background-color: rgba(220, 53, 69, 0.1);
+        }
+    </style>
+}
